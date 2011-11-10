@@ -1,0 +1,36 @@
+#Non-linear schródineger equation solver
+
+#Rzędy wielkości i jednostki:
+~100 pikosekund - czasowo
+~10 mikrometrów - przestrzennie
+
+#stałe fizyczne wyrażane w powyższych jednostkach (pikosekundy i mikrometry)
+h_bar=6.582 119 15 x 10e-1 [meV*ps]
+      0.658211915
+
+g_c= 6 x 10e-3 [meV* μm^2]
+     0.006
+
+g_r = 2*g_c
+      0.012
+
+γC = 0.33 [ps^-1]
+     0.33
+
+γR ≈ 1.5γC 
+     0.495
+#R = γR * 0.33 [ps^-1 / 25 mW]
+R = 0.16022 x 10e-6 [ps meV^-1]
+    0.00000160022
+#prędkość światła
+
+c = 7.92458 10e+2 [μm/ps]
+
+#masa elektronu
+m_e = 8.1371 x 10e+2 [meV ps^2 μm^-2]
+      813.71 
+
+#masa polarytonu
+m_p = 0.040685 [meV ps^2 μm^-2]
+      
+
