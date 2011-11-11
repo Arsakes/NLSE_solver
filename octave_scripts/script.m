@@ -15,7 +15,7 @@ d=10.0;
 a=1.0/(d*2.0*pi);
 
 #%przepisanie stałych
-physical_constants=[h_bar, a*g_c, a*g_r, lam_c, lam_r, m, a*R, xstep, 0.001];
+physical_constants=[h_bar, a*g_c, a*g_r, lam_c, lam_r, m, a*R, xstep, 0.005];
 #%potencjał
 
 V=complex(zeros(1,half_size*2.0));
@@ -24,7 +24,7 @@ X=linspace(- half_size*xstep, (half_size-1)*xstep, half_size * 2);
 #%PSI = soliton(X,0.0,0.0);
 n_r=real(zeros(1,half_size*2));
 P_l=real(exp(-X.^2));
-time_steps=linspace(0.0,4.0 , 64);
+time_steps=linspace(0.0,0.1 , 16);
 rnd=stdnormal_rnd(half_size*2,1) * 0.1;
 PSI=complex(rnd, rnd);
 
@@ -35,12 +35,12 @@ PSI=complex(rnd, rnd);
 subplot(2,1,1)
 pcolor(xx,yy,abs(PSI_wynik) ), shading("interp");
 axis([0, max(time_steps) ,-(half_size)*xstep*0.5, (half_size -1)*xstep*0.5]);
-#colormap(hot)
+colormap(hot)
 title('wave function evolution')
 #%plot(X, abs(PSI_wynik));
 #%axis([-half_size*xstep, (half_size -1)*xstep]);
 subplot(2,1,2)
-plot(xx,yy,NR_wynik);
+pcolor(xx,yy,NR_wynik);
 axis([0, max(time_steps) ,-(half_size)*xstep*0.5, (half_size -1)*xstep*0.5]);
 title('reservoir polariton density')
 

@@ -97,6 +97,8 @@ void inline solution::second_step()
     }
 }//spoko
 
+
+//LEAP-FROG
 void solution::make_time_step()
 {
     //jak wskazywałaby nazwa krok drugi jest wykonywany pierwszy
