@@ -1,4 +1,4 @@
-// 
+//
 //		PROGRAM MA SŁUŻYĆ JAKO MODUŁ DO OCTAVE
 //
 //   Ewolucja wedle nieliniowego równania Sh, z uwzględniniem zmiennej liczby cząstek
@@ -94,6 +94,7 @@ class solution
     fourier_transform FT;
     
     //FUNKCJA, która może być dostarczona z zewnątrz, ale na razie po prostu jest metodą
+    //żeby być bardziej "explicit"
     double inline R( double s )
     { 
         return s*CONST.R;

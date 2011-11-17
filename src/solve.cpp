@@ -50,7 +50,7 @@ solution::~solution()
    //fftw_free(A_n);
 }
 
-void inline solution::first_step()
+void solution::first_step()
 {
    //jedna część równania z pochodną przestrzenną jest
    //ewoluowana do następnej chwili czasowej
@@ -76,7 +76,7 @@ void inline solution::first_step()
     FT.compute( backward );
 }//spoko
 
-void inline solution::second_step()
+void solution::second_step()
 { 
     complex phase(0.0,0.0);
     for(int i = 0 ; i < data_size;  ++i)

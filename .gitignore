@@ -1,3 +1,4 @@
 #Ignoruj pliki obiektów
 *.o
 *.oct
+*.m
