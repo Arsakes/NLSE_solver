@@ -5,18 +5,18 @@
 //
 //
 //
-
 #include<vector>
 #include<complex>
-//funkcje matematyczne
 #include<cmath>
-//transformata fouriera
-#include <fftw3.h>
+
 //raportowanie błędów
 #include<sstream>
 
+//transformata fouriera
+#include <fftw3.h>
 //PRZESTRZEŃ NAZW - chyba nie potrzebna jak na razie
 typedef std::complex<double> std_complex;
+
 
 
 enum direction
@@ -25,7 +25,8 @@ enum direction
    backward =  1
 };
 
-namespace nan_exception
+//--------------NAMESPACE::nan_exception----------------------------------------------
+namespace num_exception
 {
 
 enum Enum
@@ -36,16 +37,17 @@ enum Enum
    nan_V   = 8,
 };
 
-bool inline is_nan( std_complex x )
+struct exception
 {
-   if( std::isnan( x.real() ) || std::isnan( x.imag()  )  )
-       return true;
-   else 
-       return false;
-}
+   std::string report;
+   int error_state;
+};
+
+//sprawdza czy liczba jest skończona (tzn nie jest nieskończona albo NaN)
+bool is_finite( std_complex  x );
 
 }
-
+//--------------ENDOF_NAMESPACE::nan_exception---------------------------------------
 
 //TRANSFORMACJA FOURIERA 
 class fourier_transform
@@ -132,8 +134,7 @@ class solution
     void make_time_step();
     void apply_boundary_condition(std_complex start, std_complex end,  double falloff);
     
-    //DANE KONTROLNE
-    int error_state;
+    //NUMER KROKU
     int step;
     
   public:
@@ -149,5 +150,5 @@ class solution
     double abs_val();
 
     //FUNKCJA RAPORTUJĄCA O WSZELKICH WARTOŚCIACH NAN
-    const std::string report_exceptions();
+    const num_exception::exception report_exception();
 };

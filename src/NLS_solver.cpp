@@ -21,6 +21,8 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
     //    args(3) - wektor wierszowy oświetlanie przez laser rzeczywisty wektor
     //    args(4) - wektor wierszowy kroki czasowe           rzeczywisty wektor
     //    args(5) - wektor wierszowy stałe w problemie,      rzeczywisty wektor
+    
+    //----------------------KONTROLA WEJŚCIA ZE WZGLĘDU NA TYP--------------------------
     input_test_val error_state_str;
     if(error_state)
     { 
@@ -80,7 +82,6 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
          error("Bad number of simulation constants provided");
 
     //punkt czasowy z którego zaczynamy
-        
 
     std_complex x; 
     std::vector<std_complex> in_psi0( 0);
@@ -106,23 +107,43 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
     double xstep = constants(7);
     double tstep = constants(8);
     
+//--------------------------------KONTROLA WEJŚCIA ZE WZGLĘDU NA ZAKRES WARTOŚCI---------------------------
+if(xstep == 0) error("Spatial step must be positve value.");
+if(tstep == 0) error("Time step must be positve value.");
+if(constants(0) == 0) error(" 'h_bar' must be non-zero value.");
+if(constants(5) == 0) error(" 'm' must be non-zero value.");
+
+
 //--------------------------------CZĘŚĆ SYMULACYJNA FUNKCJI-----------------------------------------
     
      solution NLS_solver=solution( in_psi0, in_V, in_n_r0, in_P_l,  xstep, tstep, in_consts  );   
 
      dim_vector dv (2);
-          dv(0) = spatial_size; dv(1) = time_steps.nelem();
+     dv(0) = spatial_size; 
+     dv(1) = time_steps.nelem();
+     octave_value_list retval;
      ComplexNDArray output_psi(dv);
      ComplexNDArray output_n_r(dv);
      double time = 0.0;
+     
+     //ZMIENNA PRZECHOWUJĄCA INFORMACJE O BŁĘDACH WEWNĄTRZ SYMULACJI 
+     num_exception::exception sim_error;
 
      for( int index=0; index < time_steps.nelem(); index++)
      { 
-
+         //raportuj o wszystkich napotkanych nieskończonościach i NANach
+         sim_error = NLS_solver.report_exception();
+         if( sim_error.error_state )	
+         {
+             printf(sim_error.report.c_str() );
+         }
+         
          double delta_time = time_steps(index) - time ;
          if(delta_time >= std::abs(tstep) || index == 0)   
-        {
+         {
+            //iteruje aż do momentu wyplucia danych w momencie zadanym przez tablice time_steps
             NLS_solver.evolution( std::floor( delta_time/ std::abs(tstep)  ) );
+            
             for(int i=0; i< spatial_size; ++i)
             { 
                 //co istotne indeksy dla typów array są pojedyńczymi liczbami(!) macierza mają dodatkowo (,) dla podwójnego indeksowania
@@ -131,14 +152,13 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
             }
         }
         //żeby poprawnie liczyć czas
-        time += std::floor(delta_time/std::abs(tstep)) * tstep;
+        time += std::floor(delta_time/std::abs(tstep)) * std::abs(tstep);
         //dodawanie rozwiązania do macierzy rozwiązań
     }
   
     //---------------------------------CZĘŚĆ INTERAKCJI WYJŚCIE------------------------------------------------
-    octave_value_list retval;
-    retval(1) = output_n_r;
-    retval(0) = output_psi;
+    retval.append( output_psi );
+    retval.append( output_n_r );
     
     return retval;
 }

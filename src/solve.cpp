@@ -1,5 +1,9 @@
 #include"solve.h"
 
+//c++11:: SPRAWDŹ CZY MOŻLIWA JEST KONWERSJA
+static_assert( sizeof(fftw_complex) == sizeof(std_complex), "fftw complex not compatibile with std::complex<double>" );
+
+
 const double PI = 3.1415926535;
 
 solution::solution(const std::vector<std_complex>& temp, const std::vector<std_complex>& temp_V, 
@@ -35,7 +39,6 @@ solution::solution(const std::vector<std_complex>& temp, const std::vector<std_c
        psi[i] = temp[i];
    }
    
-   error_state = 0;
    step = 0;
    
 }//spoko
@@ -182,40 +185,40 @@ const double solution::output_n_r(int i)
     return n_r[i];
 }//spoko loko
 
-const std::string solution::report_exceptions()
+const num_exception::exception solution::report_exception()
 {
    //FIXME -- czy takie operacje dają wynik niezależny od implementacji "int"
-   error_state = 0;
+   int error_state = 0;
    std::ostringstream report;
 
-   std::string comment("NAN value found in: ");
+   std::string comment("NAN or infinite value found in: ");
 
    for(int i = 0;i<data_size; ++i)
    {
-       if( nan_exception::is_nan(n_r[i]) && (error_state & nan_exception::nan_n_r) )
+       if( num_exception::is_finite(n_r[i])==0 && (error_state & num_exception::nan_n_r) == 0)
        {
-          error_state =  error_state | nan_exception::nan_n_r;
+          error_state =  error_state | num_exception::nan_n_r;
           report << comment;
           report << std::string("n_r");
 	  report << std::endl;
        }
-       if( nan_exception::is_nan(psi[i]) && (error_state & nan_exception::nan_psi) )
+       if( num_exception::is_finite(psi[i])==0 && (error_state & num_exception::nan_psi) == 0 )
        {
-          error_state =  error_state | nan_exception::nan_psi;
+          error_state =  error_state | num_exception::nan_psi;
           report << comment;
           report << std::string("psi");
 	  report << std::endl;
        }
-       if( nan_exception::is_nan(V[i]) && ( error_state & nan_exception::nan_V) )
+       if( num_exception::is_finite(V[i])==0 && ( error_state & num_exception::nan_V) == 0 )
        {
-          error_state =  error_state | nan_exception::nan_V;
+          error_state =  error_state | num_exception::nan_V;
           report << comment;
           report << std::string("V");
 	  report << std::endl;
        }
-       if( nan_exception::is_nan(P_l[i]) && (error_state & nan_exception::nan_P_l) )
+       if( num_exception::is_finite(P_l[i])==0 && (error_state & num_exception::nan_P_l) == 0 )
        {
-          error_state =  error_state | nan_exception::nan_P_l;
+          error_state =  error_state | num_exception::nan_P_l;
 	  report << comment;
 	  report << std::string("P_l");
 	  report << std::endl;
@@ -224,13 +227,18 @@ const std::string solution::report_exceptions()
    
    if(error_state == 0)
    {
-       report << std::string("No exception::isnans found in step");
+       report << std::string("No exception found ");
    }
    
    report << std::string("in step: ");
    report << step;
+   report << std::endl;
 
-   return report.str();   
+   num_exception::exception temp;
+   temp.report = report.str();
+   temp.error_state = error_state;
+   
+   return temp;   
 }//spoko loko
 
 //-------------------------PHYSICAL_CONSTANTS------------------------------
@@ -245,12 +253,22 @@ physical_constants::physical_constants()
     R=0.0;  
 }
 
-//-------------------FFTW3-------------------------------------------------
+//-------------------FFTW3---------------------------------------------------
 
 //fftw może używać tego samego planu jak długo rozmiar tablicy jest ten sam 
 fourier_transform::~fourier_transform()
 {
     fftw_destroy_plan( forward_plan );
     fftw_destroy_plan( backward_plan );
+}
+
+
+//------------------num_exception namespace-----------------------------------
+bool num_exception::is_finite( std_complex  x )
+{
+   if( std::isfinite( x.real() ) && std::isfinite( x.imag()  )  )
+       return true;
+   else 
+       return false;
 }
 
