@@ -1,4 +1,7 @@
-#Ignoruj pliki obiektów
+#Ignoruj pliki obiektów, tymczasowe pliki edytora i skrypty octave
+*.h
+*.gch
 *.o
 *.oct
 *.m
+*.swp

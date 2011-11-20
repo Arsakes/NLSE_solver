@@ -8,11 +8,15 @@
 
 #include<vector>
 #include<complex>
-
 //funkcje matematyczne
 #include<cmath>
 //transformata fouriera
 #include <fftw3.h>
+//raportowanie błędów
+#include<sstream>
+
+//PRZESTRZEŃ NAZW - chyba nie potrzebna jak na razie
+typedef std::complex<double> std_complex;
 
 
 enum direction
@@ -21,12 +25,27 @@ enum direction
    backward =  1
 };
 
+namespace nan_exception
+{
 
-//PRZESTRZEŃ NAZW - chyba nie potrzebna jak na razie
-typedef std::complex<double> complex;
+enum Enum
+{
+   nan_psi = 1,
+   nan_n_r = 2,
+   nan_P_l = 4,
+   nan_V   = 8,
+};
 
-//TYP DO MACIERZY LICZB RZECZYWISTYCH
-//typedef std::vector< std::vector<double> > matrix_double;
+bool inline is_nan( std_complex x )
+{
+   if( std::isnan( x.real() ) || std::isnan( x.imag()  )  )
+       return true;
+   else 
+       return false;
+}
+
+}
+
 
 //TRANSFORMACJA FOURIERA 
 class fourier_transform
@@ -39,7 +58,8 @@ class fourier_transform
     fftw_plan forward_plan;
     fftw_plan backward_plan;
   public:
-    void inline init( complex* in , complex* out, int size)
+    //FIXME -- czy coś takiego rzutowanie jest bezpieczne, może da się lepiej?
+    void inline init( std_complex* in , std_complex* out, int size)
     {
            forward_plan = fftw_plan_dft_1d( size, reinterpret_cast<fftw_complex*>(in), 
 	   		reinterpret_cast<fftw_complex*>(out), FFTW_FORWARD, FFTW_PATIENT);
@@ -75,9 +95,12 @@ class solution
   private:
     //zmienne przechowujące wartość rozwiązania dla ustalonego czasu "t" 
     //warunki brzegowe
-    //complex boundary_begin;
-    //complex boundary_end;
-    complex* psi;
+    //std_complex boundary_begin;
+    //std_complex boundary_end;
+    
+    //FIXME - może jest bezpieczniejszy sposób żeby pogodzić fftw i wskaźniki?
+    std_complex* volatile psi;
+    
     std::vector<double>  n_r;
     
     //DANE RÓWNANIA 
@@ -85,7 +108,7 @@ class solution
     double step_spatial;
     double step_temporal; //krok czasowy może być urojony odpowiada to operatorowi nie
     int data_size;
-    std::vector<complex> V;
+    std::vector<std_complex> V;
     std::vector<double> P_l;
  
     //STAŁE FIZYCZNE
@@ -93,6 +116,9 @@ class solution
   
     fourier_transform FT;
     
+    
+    //to zanczy dzielenie przez zero albo wyjście poza zakres
+   
     //FUNKCJA, która może być dostarczona z zewnątrz, ale na razie po prostu jest metodą
     //żeby być bardziej "explicit"
     double inline R( double s )
@@ -104,17 +130,24 @@ class solution
     void first_step();
     void second_step();
     void make_time_step();
-    void apply_boundary_condition(complex start, complex end,  double falloff);
+    void apply_boundary_condition(std_complex start, std_complex end,  double falloff);
+    
+    //DANE KONTROLNE
+    int error_state;
+    int step;
     
   public:
-    solution(const std::vector<complex>& temp, const std::vector<complex>& temp_V, 
+    solution(const std::vector<std_complex>& temp, const std::vector<std_complex>& temp_V, 
           const std::vector<double>& temp_n, const std::vector<double>& temp_p,
           double xstep, double tstep, physical_constants C );
     ~solution();
     void evolution(int steps  );
-    const std::vector<complex> output_psi();
+    const std::vector<std_complex> output_psi();
     const std::vector<double> output_n_r();
-    const complex output_psi(int i);
+    const std_complex output_psi(int i);
     const double output_n_r(int i );
     double abs_val();
+
+    //FUNKCJA RAPORTUJĄCA O WSZELKICH WARTOŚCIACH NAN
+    const std::string report_exceptions();
 };

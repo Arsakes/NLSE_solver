@@ -2,7 +2,7 @@
 
 const double PI = 3.1415926535;
 
-solution::solution(const std::vector<complex>& temp, const std::vector<complex>& temp_V, 
+solution::solution(const std::vector<std_complex>& temp, const std::vector<std_complex>& temp_V, 
      const std::vector<double>& temp_n, const std::vector<double>& temp_p,
      double xstep =0.01, double tstep=0.001, physical_constants C = physical_constants()   )
 {
@@ -19,19 +19,24 @@ solution::solution(const std::vector<complex>& temp, const std::vector<complex>&
    CONST.R = C.R;
 
    data_size = temp.size();
-   V = std::vector<complex>(temp_V);
+   V = std::vector<std_complex>(temp_V);
    n_r = std::vector<double>(temp_n);
    P_l = std::vector<double>(temp_p);
 
    //inicjacja fftw
    FT=fourier_transform();
-   psi = reinterpret_cast<complex*>( fftw_malloc(sizeof(complex) * data_size) );
+   
+   //FIXME -- czy ta konwersja jest bezpieczna? znaleźć inny sposób
+   psi = reinterpret_cast<std_complex*>( fftw_malloc(sizeof(std_complex) * data_size) );
    FT.init( psi, psi, data_size);
    
    for(int i = 0; i < data_size; ++i)
    {
        psi[i] = temp[i];
    }
+   
+   error_state = 0;
+   step = 0;
    
 }//spoko
 
@@ -44,11 +49,14 @@ solution::solution(const std::vector<complex>& temp, const std::vector<complex>&
 //
 //  2)  dN_dt = Pl (x,t ) − γR n_R (x,t ) − R(n_R (x,t ))|ψ(x,t )|2 
 //  
+
+
 solution::~solution()
 {
    fftw_free(psi);
-   //fftw_free(A_n);
 }
+//spoko loko
+
 
 void solution::first_step()
 {
@@ -58,7 +66,7 @@ void solution::first_step()
    for(int i =0; i<data_size ; ++i)
    {
       //normalizacja
-      psi[i] = psi[i] / complex(data_size,0.0);
+      psi[i] = psi[i] / std_complex(data_size,0.0);
       //coś co wyskakuje przy liczeniu pochodnej
       //numer indeksu po którym częstotliwość zaczyna być dodatnia
       int i_max = (data_size-data_size%2)/2 - 1 + data_size%2;
@@ -69,7 +77,7 @@ void solution::first_step()
       }
       double k_square = std::pow( PI*k*2.0 / (data_size*step_spatial), 2.0);
        //std::cout<<std::sqrt(k_square)<<std::endl;
-       psi[i] = psi[i] * std::exp(complex(0.0,-k_square ) * step_temporal * 0.5*CONST.h_bar/CONST.m ) ;   
+       psi[i] = psi[i] * std::exp(std_complex(0.0,-k_square ) * step_temporal * 0.5*CONST.h_bar/CONST.m ) ;   
     }
 
 
@@ -78,18 +86,18 @@ void solution::first_step()
 
 void solution::second_step()
 { 
-    complex phase(0.0,0.0);
+    std_complex phase(0.0,0.0);
     for(int i = 0 ; i < data_size;  ++i)
     { 
         //EWOLUCJA "psi"
         //ewolucja napędzane nieliniowością i potencjałem
-         phase = complex(0.0, CONST.g_c * std::norm(psi[i]) ); 
-         phase += complex(0.0,1.0) * V[i] ;
+         phase = std_complex(0.0, CONST.g_c * std::norm(psi[i]) ); 
+         phase += std_complex(0.0,1.0) * V[i] ;
         
         //ewolucja napędzana przez rozpraszanie i zmiany w ilości polarytonów
-         phase += complex( 0.5* (CONST.lam_c - R(n_r[i]))*CONST.h_bar, CONST.g_r *n_r[i] );  // plus działanie funkcji R na n_r
+         phase += std_complex( 0.5* (CONST.lam_c - R(n_r[i]))*CONST.h_bar, CONST.g_r *n_r[i] );  // plus działanie funkcji R na n_r
         //aplikacja do funkcji falowej
-         psi[i] = psi[i] * std::exp( -phase * step_temporal /CONST.h_bar );
+         psi[i] = psi[i] * std::exp( -phase * (step_temporal /CONST.h_bar) );
 
         //EWOLUCJA "n_r"
         n_r[i] += ( P_l[i] - CONST.lam_r * n_r[i] - R(n_r[i] ) * std::norm(psi[i]) )*step_temporal;
@@ -104,6 +112,7 @@ void solution::make_time_step()
     //jak wskazywałaby nazwa krok drugi jest wykonywany pierwszy
     first_step();
     second_step();
+    ++step;
 }//spoko
 
 void solution::evolution(int steps )
@@ -111,12 +120,11 @@ void solution::evolution(int steps )
     for(int i = 0; i < steps; i++)
     {
             make_time_step();
-            apply_boundary_condition(complex(0.0,0.0), complex(0.0,0.0), 0.1 );
+            apply_boundary_condition(std_complex(0.0,0.0), std_complex(0.0,0.0), 0.1 );
     }
 }//spoko
 
-//
-void solution::apply_boundary_condition(complex a=complex(0.0,0.0), complex b=complex(0.0,0.0), double c = 0.1)
+void solution::apply_boundary_condition(std_complex a=std_complex(0.0,0.0), std_complex b=std_complex(0.0,0.0), double c = 0.1)
 {
    int falloff = std::floor( c * static_cast<double>(data_size) );
    int k;
@@ -150,31 +158,81 @@ double solution::abs_val( )
  	wynik+= std::norm(psi[i]) * step_spatial;
     return std::sqrt(wynik);
 }//spoko loko
-const std::vector<complex> solution::output_psi()
+
+const std::vector<std_complex> solution::output_psi()
 {
-    std::vector<complex> out = std::vector<complex>(0);
+    std::vector<std_complex> out = std::vector<std_complex>(0);
     for(int i = 0; i < data_size; ++i )
         out.push_back(psi[i]);
     return out;    
 }//spoko loko
 
-const complex solution::output_psi(int i)
+const std_complex solution::output_psi(int i)
 {
     return psi[i];
-}
-//spoko loko
+}//spoko loko
+
 const std::vector<double> solution::output_n_r()
 {
-    std::vector<double> out = std::vector<double>(0);
-    for(int i = 0; i < data_size; ++i )
-        out.push_back(n_r[i]);
-    return out;    
+    return n_r;    
 }//spoko loko
 
 const double solution::output_n_r(int i)
 {
     return n_r[i];
-}
+}//spoko loko
+
+const std::string solution::report_exceptions()
+{
+   //FIXME -- czy takie operacje dają wynik niezależny od implementacji "int"
+   error_state = 0;
+   std::ostringstream report;
+
+   std::string comment("NAN value found in: ");
+
+   for(int i = 0;i<data_size; ++i)
+   {
+       if( nan_exception::is_nan(n_r[i]) && (error_state & nan_exception::nan_n_r) )
+       {
+          error_state =  error_state | nan_exception::nan_n_r;
+          report << comment;
+          report << std::string("n_r");
+	  report << std::endl;
+       }
+       if( nan_exception::is_nan(psi[i]) && (error_state & nan_exception::nan_psi) )
+       {
+          error_state =  error_state | nan_exception::nan_psi;
+          report << comment;
+          report << std::string("psi");
+	  report << std::endl;
+       }
+       if( nan_exception::is_nan(V[i]) && ( error_state & nan_exception::nan_V) )
+       {
+          error_state =  error_state | nan_exception::nan_V;
+          report << comment;
+          report << std::string("V");
+	  report << std::endl;
+       }
+       if( nan_exception::is_nan(P_l[i]) && (error_state & nan_exception::nan_P_l) )
+       {
+          error_state =  error_state | nan_exception::nan_P_l;
+	  report << comment;
+	  report << std::string("P_l");
+	  report << std::endl;
+       }
+   }
+   
+   if(error_state == 0)
+   {
+       report << std::string("No exception::isnans found in step");
+   }
+   
+   report << std::string("in step: ");
+   report << step;
+
+   return report.str();   
+}//spoko loko
+
 //-------------------------PHYSICAL_CONSTANTS------------------------------
 physical_constants::physical_constants()
 {
@@ -184,7 +242,7 @@ physical_constants::physical_constants()
     m = 0.5;
     lam_c = 0.0;
     lam_r = 0.0;
-    R=0.0;
+    R=0.0;  
 }
 
 //-------------------FFTW3-------------------------------------------------

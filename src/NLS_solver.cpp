@@ -82,17 +82,17 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
     //punkt czasowy z którego zaczynamy
         
 
-    complex x; 
-    std::vector<complex> in_psi0( 0);
-    std::vector<complex> in_V(0);
+    std_complex x; 
+    std::vector<std_complex> in_psi0( 0);
+    std::vector<std_complex> in_V(0);
     std::vector<double>  in_n_r0(0);
     std::vector<double>  in_P_l(0);
     physical_constants in_consts;
 
     for(int i =0; i< spatial_size ;i++)  
     {
-        in_psi0.push_back( complex( psi0(i).real(), psi0(i).imag() ));
-        in_V.push_back( complex( V(i).real(), V(i).imag() ));
+        in_psi0.push_back( std_complex( psi0(i).real(), psi0(i).imag() ));
+        in_V.push_back( std_complex( V(i).real(), V(i).imag() ));
         in_n_r0.push_back( n_r0(i) );
         in_P_l.push_back( P_l(i) );
     }
