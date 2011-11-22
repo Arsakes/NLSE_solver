@@ -5,3 +5,5 @@
 *.oct
 *.m
 *.swp
+#ten plik pojawia się podaczas pracy octave
+octave-core

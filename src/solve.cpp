@@ -113,8 +113,8 @@ void solution::second_step()
 void solution::make_time_step()
 {
     //jak wskazywałaby nazwa krok drugi jest wykonywany pierwszy
-    first_step();
     second_step();
+    first_step();
     ++step;
 }//spoko
 
