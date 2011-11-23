@@ -101,7 +101,8 @@ void solution::second_step()
          phase += std_complex( 0.5* (CONST.lam_c - R(n_r[i]))*CONST.h_bar, CONST.g_r *n_r[i] );  // plus działanie funkcji R na n_r
         //aplikacja do funkcji falowej
          psi[i] = psi[i] * std::exp( -phase * (step_temporal /CONST.h_bar) );
-
+        //FIXME -- test żeby zobaczyć co jest przyczyną szumów
+        // ewolucja n_r zostaje zamrożona po jakimś tam kroku
         //EWOLUCJA "n_r"
         n_r[i] += ( P_l[i] - CONST.lam_r * n_r[i] - R(n_r[i] ) * std::norm(psi[i]) )*step_temporal;
 

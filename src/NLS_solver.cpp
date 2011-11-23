@@ -108,10 +108,25 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
     double tstep = constants(8);
     
 //--------------------------------KONTROLA WEJŚCIA ZE WZGLĘDU NA ZAKRES WARTOŚCI---------------------------
-if(xstep == 0) error("Spatial step must be positve value.");
-if(tstep == 0) error("Time step must be positve value.");
-if(constants(0) == 0) error(" 'h_bar' must be non-zero value.");
-if(constants(5) == 0) error(" 'm' must be non-zero value.");
+if(xstep == 0) 
+{
+    error("Spatial step must be positve value.");
+    return octave_value_list;
+}
+if(tstep == 0)
+{
+    error("Time step must be positve value.");
+}
+if(constants(0) == 0) 
+{
+    error(" 'h_bar' must be non-zero value.");
+    return octave_value_list;
+}
+if(constants(5) == 0)
+{
+    error(" 'm' must be non-zero value.");
+    return octave_value_list;
+}
 
 
 //--------------------------------CZĘŚĆ SYMULACYJNA FUNKCJI-----------------------------------------
@@ -138,19 +153,21 @@ if(constants(5) == 0) error(" 'm' must be non-zero value.");
              printf(sim_error.report.c_str() );
          }
          
-         double delta_time = time_steps(index) - time ;
-         if(delta_time >= std::abs(tstep) || index == 0)   
-         {
-            //iteruje aż do momentu wyplucia danych w momencie zadanym przez tablice time_steps
-            NLS_solver.evolution( std::floor( delta_time/ std::abs(tstep)  ) );
+         //double delta_time = time_steps(index) - time ; niepotrzebne evolution jest 
+         // inteligentną funkcją
+         // dopuszczone sa puste iteracje (ciało symulacji nie jest wykonywane a krok nie jest
+         // liczony, tak się zdarza dla chujowo małych czasów
+         //iteruje aż do momentu wyplucia danych w momencie zadanym przez tablice time_steps
+         NLS_solver.evolution( std::floor( delta_time/ std::abs(tstep)  ) );
             
-            for(int i=0; i< spatial_size; ++i)
-            { 
-                //co istotne indeksy dla typów array są pojedyńczymi liczbami(!) macierza mają dodatkowo (,) dla podwójnego indeksowania
-                output_psi(i + spatial_size * index) = NLS_solver.output_psi(i);
-                output_n_r(i + spatial_size * index) = NLS_solver.output_n_r(i);
-            }
-        }
+         for(int i=0; i< spatial_size; ++i)
+         { 
+         //co istotne indeksy dla typów array są pojedyńczymi liczbami(!) 
+         //macierza mają dodatkowo (,) dla podwójnego indeksowania ale ich nie używam
+            output_psi(i + spatial_size * index) = NLS_solver.output_psi(i);
+            output_n_r(i + spatial_size * index) = NLS_solver.output_n_r(i);
+         }
+        
         //żeby poprawnie liczyć czas
         time += std::floor(delta_time/std::abs(tstep)) * std::abs(tstep);
         //dodawanie rozwiązania do macierzy rozwiązań
