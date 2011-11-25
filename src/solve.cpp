@@ -1,7 +1,7 @@
 #include"solve.h"
 
 //c++11:: SPRAWDŹ CZY MOŻLIWA JEST KONWERSJA
-static_assert( sizeof(fftw_complex) == sizeof(std_complex), "fftw complex not compatibile with std::complex<double>" );
+//static_assert( sizeof(fftw_complex) == sizeof(std_complex), "fftw complex not compatibile with std::complex<double>" );
 
 
 const double PI = 3.1415926535;
@@ -104,8 +104,8 @@ void solution::second_step()
         //FIXME -- test żeby zobaczyć co jest przyczyną szumów
         // ewolucja n_r zostaje zamrożona po jakimś tam kroku
         //EWOLUCJA "n_r"
-        n_r[i] += ( P_l[i] - CONST.lam_r * n_r[i] - R(n_r[i] ) * std::norm(psi[i]) )*step_temporal;
-
+        n_r[i] = n_r[i] + ( P_l[i] - CONST.lam_r * n_r[i] - R(n_r[i] ) * std::norm(psi[i]) )*step_temporal;
+        
     }
 }//spoko
 

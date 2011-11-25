@@ -111,7 +111,7 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
 if(xstep == 0) 
 {
     error("Spatial step must be positve value.");
-    return octave_value_list;
+    return octave_value_list();
 }
 if(tstep == 0)
 {
@@ -120,12 +120,12 @@ if(tstep == 0)
 if(constants(0) == 0) 
 {
     error(" 'h_bar' must be non-zero value.");
-    return octave_value_list;
+    return octave_value_list();
 }
 if(constants(5) == 0)
 {
     error(" 'm' must be non-zero value.");
-    return octave_value_list;
+    return octave_value_list();
 }
 
 
@@ -150,11 +150,11 @@ if(constants(5) == 0)
          sim_error = NLS_solver.report_exception();
          if( sim_error.error_state )	
          {
-             printf(sim_error.report.c_str() );
+             //moze disp?
+             printf( sim_error.report.c_str() );
          }
          
-         //double delta_time = time_steps(index) - time ; niepotrzebne evolution jest 
-         // inteligentną funkcją
+         double delta_time = time_steps(index) - time ; 
          // dopuszczone sa puste iteracje (ciało symulacji nie jest wykonywane a krok nie jest
          // liczony, tak się zdarza dla chujowo małych czasów
          //iteruje aż do momentu wyplucia danych w momencie zadanym przez tablice time_steps
@@ -164,6 +164,7 @@ if(constants(5) == 0)
          { 
          //co istotne indeksy dla typów array są pojedyńczymi liczbami(!) 
          //macierza mają dodatkowo (,) dla podwójnego indeksowania ale ich nie używam
+         //FIXME -- kiepski sposób- nie wiem do końca jak octave indeksuje macierze -potencjalny bug
             output_psi(i + spatial_size * index) = NLS_solver.output_psi(i);
             output_n_r(i + spatial_size * index) = NLS_solver.output_n_r(i);
          }
