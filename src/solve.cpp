@@ -7,7 +7,8 @@
 const double PI = 3.1415926535;
 
 solution::solution(const std::vector<std_complex>& temp, const std::vector<std_complex>& temp_V, 
-     const std::vector<double>& temp_n, const std::vector<double>& temp_p,
+     const std::vector<double>& temp_na, const std::vector<double>& temp_ni,
+     const std::vector<double>& temp_p,
      double xstep =0.01, double tstep=0.001, physical_constants C = physical_constants()   )
 {
 
@@ -16,15 +17,18 @@ solution::solution(const std::vector<std_complex>& temp, const std::vector<std_c
    //inicjacja stałych fizycznych
    CONST.h_bar = C.h_bar;
    CONST.g_r = C.g_r;
-   CONST.g_c = C.g_c;
+   CONST.g = C.g;
    CONST.lam_c = C.lam_c;
-   CONST.lam_r = C.lam_r;
+   CONST.lam_a = C.lam_a;
+   CONST.lam_i = C.lam_i;
+   CONST.tau = C.tau;
    CONST.m = C.m;
    CONST.R = C.R;
 
    data_size = temp.size();
    V = std::vector<std_complex>(temp_V);
-   n_r = std::vector<double>(temp_n);
+   n_a = std::vector<double>(temp_na);
+   n_i = std::vector<double>(temp_ni);
    P_l = std::vector<double>(temp_p);
 
    //inicjacja fftw
@@ -42,16 +46,6 @@ solution::solution(const std::vector<std_complex>& temp, const std::vector<std_c
    step = 0;
    
 }//spoko
-
-
-
-//
-// ROZWIĄZYWANE ZAGADNIENIE
-//  równanie zacytowano dla ustelenia znaków w problemie
-//  1)  dF_dt = i*dF_dxx*[h_bar/2m] - i*[g/h_bar]*|F|^2 *F - i[V/h]F
-//
-//  2)  dN_dt = Pl (x,t ) − γR n_R (x,t ) − R(n_R (x,t ))|ψ(x,t )|2 
-//  
 
 
 solution::~solution()
@@ -94,18 +88,23 @@ void solution::second_step()
     { 
         //EWOLUCJA "psi"
         //ewolucja napędzane nieliniowością i potencjałem
-         phase = std_complex(0.0, CONST.g_c * std::norm(psi[i]) ); 
-         phase += std_complex(0.0,1.0) * V[i] ;
+        phase = std_complex(0.0, CONST.g * std::norm(psi[i]) ); 
+        phase += std_complex(0.0,1.0) * V[i] ;
         
         //ewolucja napędzana przez rozpraszanie i zmiany w ilości polarytonów
-         phase += std_complex( 0.5* (CONST.lam_c - R(n_r[i]))*CONST.h_bar, CONST.g_r *n_r[i] );  // plus działanie funkcji R na n_r
+        phase += std_complex( 0.5* (CONST.lam_c - R(n_a[i])) , CONST.g_r*(n_a[i]+n_i[i]));
+
         //aplikacja do funkcji falowej
-         psi[i] = psi[i] * std::exp( -phase * (step_temporal /CONST.h_bar) );
-        //FIXME -- test żeby zobaczyć co jest przyczyną szumów
-        // ewolucja n_r zostaje zamrożona po jakimś tam kroku
-        //EWOLUCJA "n_r"
-        n_r[i] = n_r[i] + ( P_l[i] - CONST.lam_r * n_r[i] - R(n_r[i] ) * std::norm(psi[i]) )*step_temporal;
-        
+        psi[i] = psi[i] * std::exp( -phase * step_temporal);
+        //spoko loko
+
+        //EWOLUCJA "n_i" - czyli nieaktywnej populacji ekscytonów
+        n_i[i] += ( -n_i[i]*(CONST.lam_i + 1.0/CONST.tau) + P_l[i] ) * step_temporal;
+        //spoko loko
+       
+        //EWOLUCJA "n_a" - czyli aktywowanej populacji ekscytonów
+        n_a[i] += ( -n_a[i] *(CONST.lam_a + CONST.R*std::norm(psi[i])) + n_i[i]/CONST.tau ) * step_temporal;
+        //spoko loko
     }
 }//spoko
 
@@ -159,8 +158,8 @@ double solution::abs_val( )
 {
     double wynik=0;
     for(int i =0; i< data_size ; ++i)
- 	wynik+= std::norm(psi[i]) * step_spatial;
-    return std::sqrt(wynik);
+ 	wynik+= std::norm(psi[i]);
+    return std::sqrt(wynik*step_spatial);
 }//spoko loko
 
 const std::vector<std_complex> solution::output_psi()
@@ -176,14 +175,24 @@ const std_complex solution::output_psi(int i)
     return psi[i];
 }//spoko loko
 
-const std::vector<double> solution::output_n_r()
+const std::vector<double> solution::output_n_a()
 {
-    return n_r;    
+    return n_a;    
 }//spoko loko
 
-const double solution::output_n_r(int i)
+const std::vector<double> solution::output_n_i()
 {
-    return n_r[i];
+    return n_i;    
+}//spoko loko
+
+const double solution::output_n_a(int i)
+{
+    return n_a[i];
+}//spoko loko
+
+const double solution::output_n_i(int i)
+{
+    return n_i[i];
 }//spoko loko
 
 const num_exception::exception solution::report_exception()
@@ -193,14 +202,14 @@ const num_exception::exception solution::report_exception()
    std::ostringstream report;
 
    std::string comment("NAN or infinite value found in: ");
-
+   //TODO -- dodać też sprawdzanie nan w n_i
    for(int i = 0;i<data_size; ++i)
    {
-       if( num_exception::is_finite(n_r[i])==0 && (error_state & num_exception::nan_n_r) == 0)
+       if( num_exception::is_finite(n_a[i])==0 && (error_state & num_exception::nan_n_a) == 0)
        {
-          error_state =  error_state | num_exception::nan_n_r;
+          error_state =  error_state | num_exception::nan_n_a;
           report << comment;
-          report << std::string("n_r");
+          report << std::string("n_a");
 	  report << std::endl;
        }
        if( num_exception::is_finite(psi[i])==0 && (error_state & num_exception::nan_psi) == 0 )
@@ -246,11 +255,13 @@ const num_exception::exception solution::report_exception()
 physical_constants::physical_constants()
 {
     h_bar = 1.0;
-    g_c = -1.0;
+    g = -1.0;
     g_r = 0.0;
     m = 0.5;
     lam_c = 0.0;
-    lam_r = 0.0;
+    lam_a = 0.0;
+    lam_i = 0.0;
+    tau = 1.0;
     R=0.0;  
 }
 

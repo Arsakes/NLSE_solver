@@ -32,7 +32,7 @@ namespace num_exception
 enum Enum
 {
    nan_psi = 1,
-   nan_n_r = 2,
+   nan_n_a = 2,
    nan_P_l = 4,
    nan_V   = 8,
 };
@@ -83,12 +83,14 @@ class fourier_transform
 struct physical_constants
 {
    double h_bar;
-   double g_c;
+   double g;
    double g_r;
    double lam_c;
-   double lam_r;
+   double lam_a;
+   double lam_i;
    double m;
    double R;
+   double tau; //czas życia nieaktywnych ekscytonów
    physical_constants();
 };
 
@@ -103,7 +105,8 @@ class solution
     //FIXME - może jest bezpieczniejszy sposób żeby pogodzić fftw i wskaźniki?
     std_complex* volatile psi;
     
-    std::vector<double>  n_r;
+    std::vector<double>  n_a;
+    std::vector<double>  n_i; 
     
     //DANE RÓWNANIA 
     //długość kroku
@@ -139,14 +142,16 @@ class solution
     
   public:
     solution(const std::vector<std_complex>& temp, const std::vector<std_complex>& temp_V, 
-          const std::vector<double>& temp_n, const std::vector<double>& temp_p,
+          const std::vector<double>& temp_na, const std::vector<double>& temp_ni, const std::vector<double>& temp_p,
           double xstep, double tstep, physical_constants C );
     ~solution();
     void evolution(int steps  );
     const std::vector<std_complex> output_psi();
-    const std::vector<double> output_n_r();
+    const std::vector<double> output_n_a();
+    const std::vector<double> output_n_i();
     const std_complex output_psi(int i);
-    const double output_n_r(int i );
+    const double output_n_a(int i );
+    const double output_n_i(int i );
     double abs_val();
 
     //FUNKCJA RAPORTUJĄCA O WSZELKICH WARTOŚCIACH NAN
