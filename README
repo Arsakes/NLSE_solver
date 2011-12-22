@@ -1,30 +1,4 @@
 #Non-linear schródineger equation solver
-Równanie opisującym ewolucję kondensatu rozdzielono ewolucje aktywowanych ekscytonów od nieaktywnych.
+W równaniu opisującym ewolucję kondensatu rozdzielono ewolucje aktywowanych ekscytonów od nieaktywnych.
 Równanie wedle pracy: "Probing the Dynamics of Spontaneous Quantum Vortices in Polariton Superfluids"
-
-#Rzędy wielkości i jednostki:
-~100 pikosekund - czasowo
-~10 mikrometrów - przestrzennie
-~1 joule - energia
-
-#stałe fizyczne wyrażane w powyższych jednostkach (pikosekundy i mikrometry)
-h_bar=1.054 571 68 x e-22 [J/ps]
-      1.05457168 e-22
-
-g_c= 9.612 x 1e-22 [J* μm^2]
-
-g_r = 2*g_c
-
-γC = 0.33 [ps^-1]
-
-γR ≈ 1.5γC 
-
-R =γC*γR/P_th
-
-#masa elektronu
-m_e = 9.10938e-19 [J*(ps/μm)^2]
-
-#masa polarytonu
-m_p = 0.005* m_e
-      
 
