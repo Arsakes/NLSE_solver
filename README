@@ -1,4 +1,6 @@
 #Non-linear schródineger equation solver
+Równanie opisującym ewolucję kondensatu rozdzielono ewolucje aktywowanych ekscytonów od nieaktywnych.
+Równanie wedle pracy: "Probing the Dynamics of Spontaneous Quantum Vortices in Polariton Superfluids"
 
 #Rzędy wielkości i jednostki:
 ~100 pikosekund - czasowo
