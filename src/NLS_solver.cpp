@@ -20,6 +20,9 @@ DEFUN_DLD( NLS_solver, args, nargout , "Non-linear Schrodinger equation solver."
     NDArray constants;
     //format stałych  [h_bar, g, g_r, lam_c, lam_a, lam_i, tau,  m, R, xstep,tstep] ;
     
+    //TODO: Dodać obsługę macierzy tam gdzie to możliwe
+    //      
+    
     //args - lista argumentów 
     //    args(0) - wektor wierszowy warunek początkowy psi, zespolony wektor
     //    args(1) - wektor wierszowy potencjał,              zespolony wektor
