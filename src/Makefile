@@ -10,10 +10,7 @@ NLS_solver.oct : NLS_solver.cpp solve.cpp input_test.cpp
 	$(OCT_CXX) $(OCT_LDFLAGS) NLS_solver.cpp solve.cpp input_test.cpp
 
 clean : 
-	rm solve.o NLS_solver.o input_test.o NLS_solver.oct
+	rm solve.o NLS_solver.o input_test.o
 
 #solve.o: solve.cpp
 #	$(CXX) $(CXXFLAGS) solve.cpp
-
-install :
-	mv NLS_solver.oct ../octave_scripts
