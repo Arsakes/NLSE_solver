@@ -19,12 +19,12 @@ input_test_val type_test(const octave_value&  to_be_test, data_type reference_ty
                  A.error_code="Argument isn't complex scalar";
         break;
         case complex_array:
-	     A.value = !(to_be_test.is_complex_type() && (to_be_test.rows() > 1 || to_be_test.columns() > 1) );
+	     A.value = !(to_be_test.is_complex_type() );
              if(A.value)
                  A.error_code="Argument isn't complex array";
         break;
         case real_array:  
-             A.value = !(to_be_test.is_real_type() && (to_be_test.rows() > 1 || to_be_test.columns() > 1) );
+             A.value = !(to_be_test.is_real_type() );
              if(A.value)
                  A.error_code="Argument isn't real array";
         break;
