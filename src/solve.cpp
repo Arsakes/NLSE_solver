@@ -137,6 +137,8 @@ void solution::apply_boundary_condition(std_complex a=std_complex(0.0,0.0), std_
    //założenie 
    for( int i=0; i < falloff; ++i)
    { 
+       //FIXME możliwe odwołanie się do nieistniejącego elementu, patrz niżej
+       
        //translacja po y, mnożenie, translacja powrotna
        //lewy warunek brzegowy 
        k=i;
